@@ -1,0 +1,217 @@
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+from matplotlib.patches import Circle, Wedge, FancyArrowPatch
+from matplotlib.path import Path
+import matplotlib.patheffects as pe
+import random
+
+# ── Canvas ──────────────────────────────────────────────────────────────────
+fig, ax = plt.subplots(figsize=(10, 11))
+fig.patch.set_facecolor('#000000')
+ax.set_facecolor('#000000')
+ax.set_xlim(0, 10)
+ax.set_ylim(0, 11)
+ax.set_aspect('equal')
+ax.axis('off')
+
+rng = random.Random(42)
+np.random.seed(42)
+
+# ── 1. Soft ground glow ─────────────────────────────────────────────────────
+for r, a in [(3.5, 0.04), (2.5, 0.06), (1.5, 0.09)]:
+    glow = Circle((5, 3.2), r, color='#aaaaaa', alpha=a, zorder=1)
+    ax.add_patch(glow)
+
+# ── 2. Uchiha crest (fan shape) ─────────────────────────────────────────────
+cx, cy = 5.0, 6.8          # centre of crest
+
+# --- big red upper semicircle (paint-splatter style) ---
+red_circle = Circle((cx, cy), 2.05, color='#cc0000', alpha=0.95, zorder=3)
+ax.add_patch(red_circle)
+
+# Extra red splatter blobs around the circle
+splatter_offsets = [
+    (1.9, 0.3), (-1.85, 0.15), (0.4, 2.05), (-0.5, 1.95),
+    (1.5, 1.4), (-1.4, 1.5), (0.9, -1.8), (-0.8, -1.75),
+    (1.7, -0.9), (-1.6, -1.0),
+]
+for ox, oy in splatter_offsets:
+    r = rng.uniform(0.08, 0.22)
+    blob = Circle((cx + ox, cy + oy), r, color='#cc0000', alpha=rng.uniform(0.6, 0.9), zorder=3)
+    ax.add_patch(blob)
+
+# Small drips/drops
+for _ in range(25):
+    ox = rng.uniform(-2.3, 2.3)
+    oy = rng.uniform(-2.3, 2.3)
+    dist = (ox**2 + oy**2) ** 0.5
+    if 1.8 < dist < 2.6:
+        r = rng.uniform(0.03, 0.10)
+        drop = Circle((cx + ox, cy + oy), r, color='#aa0000',
+                       alpha=rng.uniform(0.4, 0.85), zorder=3)
+        ax.add_patch(drop)
+
+# --- white lower fan (Uchiha symbol bottom half) ---
+fan = Wedge((cx, cy), 2.0, 200, 340, color='white', alpha=0.92, zorder=4)
+ax.add_patch(fan)
+
+# White inner circle (hole in crest)
+inner = Circle((cx, cy), 0.55, color='#111111', zorder=5)
+ax.add_patch(inner)
+
+# ── 3. Silhouette – Itachi sitting on post ──────────────────────────────────
+# Post / pillar
+post = patches.FancyBboxPatch((4.72, 3.2), 0.56, 3.5,
+                               boxstyle="square,pad=0", color='#0a0a0a', zorder=6)
+ax.add_patch(post)
+
+# Body torso (black silhouette)
+body_verts = [
+    (4.55, 6.55), (5.45, 6.55),   # shoulders
+    (5.55, 6.1),  (5.50, 5.65),
+    (5.45, 5.35), (5.35, 5.10),
+    (5.05, 4.95), (4.95, 4.95),
+    (4.65, 5.10), (4.55, 5.35),
+    (4.50, 5.65), (4.45, 6.1),
+    (4.55, 6.55),
+]
+body_codes = [Path.MOVETO] + [Path.LINETO] * (len(body_verts) - 2) + [Path.CLOSEPOLY]
+body_path = Path(body_verts, body_codes)
+body_patch = patches.PathPatch(body_path, facecolor='#080808', edgecolor='none', zorder=7)
+ax.add_patch(body_patch)
+
+# Head
+head = Circle((5.0, 7.05), 0.38, color='#080808', zorder=7)
+ax.add_patch(head)
+
+# Hair spikes
+hair_tips = [(4.72, 7.48), (4.85, 7.52), (5.02, 7.50),
+             (5.18, 7.48), (5.35, 7.42), (5.28, 7.38)]
+for hx, hy in hair_tips:
+    spike = plt.Polygon([(hx - 0.07, 7.05), (hx, hy), (hx + 0.07, 7.05)],
+                        color='#080808', zorder=8)
+    ax.add_patch(spike)
+
+# Left arm (reaching up / sword pose)
+left_arm = plt.Polygon([
+    (4.55, 6.55), (4.35, 6.75), (4.15, 7.10),
+    (4.05, 7.40), (4.10, 7.55),
+    (4.25, 7.45), (4.30, 7.15),
+    (4.48, 6.80), (4.60, 6.60),
+], color='#080808', zorder=7)
+ax.add_patch(left_arm)
+
+# Right arm (sword raised)
+right_arm = plt.Polygon([
+    (5.45, 6.55), (5.65, 6.70), (5.85, 6.95),
+    (6.05, 7.20), (6.10, 7.45),
+    (5.95, 7.50), (5.75, 7.22),
+    (5.55, 6.95), (5.48, 6.65),
+], color='#080808', zorder=7)
+ax.add_patch(right_arm)
+
+# Legs (crossed, sitting on post)
+left_leg = plt.Polygon([
+    (4.72, 5.10), (4.55, 4.95), (4.30, 4.80),
+    (4.20, 4.70), (4.25, 4.60),
+    (4.45, 4.68), (4.72, 4.85), (4.80, 5.05),
+], color='#080808', zorder=7)
+ax.add_patch(left_leg)
+
+right_leg = plt.Polygon([
+    (5.28, 5.10), (5.45, 4.95), (5.70, 4.80),
+    (5.80, 4.70), (5.75, 4.60),
+    (5.55, 4.68), (5.28, 4.85), (5.20, 5.05),
+], color='#080808', zorder=7)
+ax.add_patch(right_leg)
+
+# ── 4. Sword ─────────────────────────────────────────────────────────────────
+# Blade (diagonal, raised right hand)
+sword_blade = plt.Polygon([
+    (5.92, 7.42), (6.60, 8.30),
+    (6.66, 8.27), (5.98, 7.38),
+], color='#cccccc', alpha=0.85, zorder=9)
+ax.add_patch(sword_blade)
+
+# Guard
+guard = plt.Polygon([
+    (5.88, 7.38), (5.98, 7.28),
+    (6.06, 7.36), (5.96, 7.46),
+], color='#999999', zorder=9)
+ax.add_patch(guard)
+
+# ── 5. Scattered crows / birds ───────────────────────────────────────────────
+def draw_bird(bx, by, size=0.12, alpha=0.75, zorder=10):
+    """Simple M-shape bird silhouette."""
+    pts = np.array([
+        [bx - size,      by],
+        [bx - size*0.5,  by + size*0.6],
+        [bx,             by + size*0.25],
+        [bx + size*0.5,  by + size*0.6],
+        [bx + size,      by],
+    ])
+    ax.plot(pts[:, 0], pts[:, 1], color='#111111', lw=1.2 * size / 0.12,
+            alpha=alpha, zorder=zorder, solid_capstyle='round')
+
+bird_positions = [
+    (3.2, 4.2, 0.10), (3.6, 3.8, 0.09), (6.8, 4.5, 0.11),
+    (7.2, 3.9, 0.09), (5.0, 3.5, 0.08), (2.8, 5.5, 0.07),
+    (7.5, 5.2, 0.08), (4.2, 3.0, 0.07), (5.8, 2.9, 0.07),
+    (3.0, 3.2, 0.06), (7.0, 3.2, 0.06),
+]
+for bx, by, sz in bird_positions:
+    draw_bird(bx, by, size=sz, alpha=0.70, zorder=10)
+
+# ── 6. Flying shuriken / kunai debris ────────────────────────────────────────
+def draw_shuriken(sx, sy, angle_deg=0, size=0.12, alpha=0.6):
+    angle = np.radians(angle_deg)
+    for k in range(4):
+        a = angle + k * np.pi / 2
+        tip = np.array([sx + size * np.cos(a), sy + size * np.sin(a)])
+        left = np.array([sx + size * 0.3 * np.cos(a + 2.4),
+                         sy + size * 0.3 * np.sin(a + 2.4)])
+        right = np.array([sx + size * 0.3 * np.cos(a - 2.4),
+                          sy + size * 0.3 * np.sin(a - 2.4)])
+        tri = plt.Polygon([tip, left, right], color='#888888', alpha=alpha, zorder=11)
+        ax.add_patch(tri)
+
+shuriken_data = [
+    (6.3, 5.8, 15),  (6.7, 6.5, 45),  (6.5, 4.8, 30),
+    (3.5, 5.5, 60),  (3.2, 6.2, 10),  (6.9, 7.0, 75),
+]
+for sx, sy, ang in shuriken_data:
+    draw_shuriken(sx, sy, angle_deg=ang, size=0.11, alpha=0.55)
+
+# ── 7. Subtle red blood-splash streaks ──────────────────────────────────────
+for _ in range(18):
+    ox = rng.uniform(-2.5, 2.5)
+    oy = rng.uniform(-0.5, 2.5)
+    length = rng.uniform(0.08, 0.35)
+    angle  = rng.uniform(0, 2 * np.pi)
+    x2 = cx + ox + length * np.cos(angle)
+    y2 = cy + oy + length * np.sin(angle)
+    ax.plot([cx + ox, x2], [cy + oy, y2],
+            color='#cc0000', lw=rng.uniform(0.5, 2.0),
+            alpha=rng.uniform(0.3, 0.7), zorder=4)
+
+# ── 8. Ground / hill silhouette ──────────────────────────────────────────────
+hill_x = np.linspace(0, 10, 300)
+hill_y = (0.18 * np.sin(np.linspace(0, np.pi, 300)) +
+          0.08 * np.sin(np.linspace(0, 3 * np.pi, 300)) + 2.9)
+ax.fill_between(hill_x, 0, hill_y, color='#0d0d0d', zorder=5)
+
+# ── 9. Vignette overlay ──────────────────────────────────────────────────────
+for r, a in [(6, 0.25), (5, 0.15), (4, 0.08)]:
+    vignette = Circle((5, 5.5), r, color='black', alpha=a, zorder=12)
+    ax.add_patch(vignette)
+# Dark corners
+for (xcorn, ycorn) in [(0, 0), (10, 0), (0, 11), (10, 11)]:
+    corner = Circle((xcorn, ycorn), 4.5, color='black', alpha=0.45, zorder=12)
+    ax.add_patch(corner)
+
+plt.tight_layout(pad=0)
+plt.savefig('itachi_art.png', dpi=180,
+            bbox_inches='tight', facecolor='black')
+plt.show()
+print("Saved → itachi_art.png (same folder as this script)")
