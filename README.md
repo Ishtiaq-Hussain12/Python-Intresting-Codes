@@ -41,7 +41,7 @@ Installation & Setup
 Clone the repository:
 
 Bash
-git clone https://github.com/YOUR_USERNAME/YOUR_REPOSITORY_NAME.git
+git clone https://github.com/Ishtiaq-Hussain12/Python-Intresting-Codes/.git
 cd YOUR_REPOSITORY_NAME
 Set up a virtual environment (Optional but recommended):
 
